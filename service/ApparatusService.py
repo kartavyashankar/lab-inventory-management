@@ -49,7 +49,7 @@ class ApparatusService:
         if user_access["apparatus"] != "write":
             raise ForbiddenOperationException
 
-        return self.apparatus_repository.update_apparatus(apparatus)
+        return self.apparatus_repository.add_apparatus(apparatus)
 
     def remove_apparatus(self, current_user: User, lab_id: int, apparatus_id: int):
         user_access = get_user_permission_for_lab(current_user, lab_id)
