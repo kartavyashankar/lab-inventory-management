@@ -128,8 +128,17 @@ class UserService:
 
     def generate_access_string(self, current_user: User, access: dict):
         parsed_access: dict = {}
+        if current_user.org_admin:
+            labs = self.lab_service.get_all_labs(current_user)
+            for lab in labs:
+                parsed_access[lab.name] = get_user_permission_for_lab(current_user, lab.tiny_id)
+            return parsed_access
+
         for lab_id in access.keys():
-            lab: Lab = self.lab_service.get_lab_by_id(current_user, int(lab_id))
-            parsed_access[lab.name] = access[lab_id]
+            try:
+                lab: Lab = self.lab_service.get_lab_by_id(current_user, int(lab_id))
+                parsed_access[lab.name] = access[lab_id]
+            except NotFoundException:
+                continue
 
         return json.dumps(parsed_access)
