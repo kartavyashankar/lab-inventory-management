@@ -1,4 +1,7 @@
 .idea
 .venv
+build
+dist
+*.spec
 *.csv
 **/__pycache__/*
