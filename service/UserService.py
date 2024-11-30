@@ -41,6 +41,9 @@ class UserService:
         user.hashed_password = hash_string(password)
         return self.user_repository.add_user(user)
 
+    def get_user_by_username(self, username: str):
+        return self.user_repository.get_user_by_username(username)
+
     def remove_user(self, current_user: User, username: str):
         if not current_user.org_admin:
             raise ForbiddenOperationException

@@ -10,7 +10,7 @@ from model.User import User
 from service.ApparatusService import ApparatusService
 from service.LabService import LabService
 from service.UserService import UserService
-from utils import clear_screen
+from utils import clear_screen, get_user_permission_for_lab
 
 
 class Menu:
@@ -84,8 +84,7 @@ class Menu:
                 print("Press " + str(download_user_data_option) + " to download user data in csv file.")
                 print("Press " + str(add_lab_option) + " to add new labs.")
                 print("Press " + str(edit_lab_option) + " to edit lab's name.")
-                print("Press " + str(
-                    remove_lab_option) + " to remove labs. Beware, this operation will also remove related apparatus data.")
+                print("Press " + str(remove_lab_option) + " to remove labs. Beware, this operation will also remove related apparatus data.")
                 print("Press " + str(list_all_labs_option) + " to list all labs.")
                 print("Press " + str(download_lab_data_option) + " to download lab data in csv file.")
                 option_high_limit = option_high_limit + 9
@@ -130,6 +129,7 @@ class Menu:
 
     def lab_menu(self, current_lab: Lab):
         while True:
+            clear_screen()
             print("Manage " + current_lab.name + "\n")
             print("Press 1 list all apparatus data.")
             print("Press 2 to download all apparatus data.")
@@ -149,13 +149,13 @@ class Menu:
                 action_map[option_high_limit] = self.edit_apparatus_menu
 
                 option_high_limit = option_high_limit + 1
-                print("Press " + str(option_high_limit) + " to update apparatus data.")
+                print("Press " + str(option_high_limit) + " to delete apparatus data.")
                 action_map[option_high_limit] = self.delete_apparatus_menu
 
             if self.current_user.org_admin or self.current_user.access[str(current_lab.tiny_id)]["user"] == "write":
                 option_high_limit = option_high_limit + 1
                 print("Press " + str(option_high_limit) + " to edit user access to lab.")
-                action_map[option_high_limit] = self.update_user_lab_acces_menu
+                action_map[option_high_limit] = self.update_user_lab_access_menu
 
             option_high_limit = option_high_limit + 1
             print("Press " + str(option_high_limit) + " to return to previous menu.")
@@ -266,6 +266,45 @@ class Menu:
             else:
                 return
 
+    def update_user_lab_access_menu(self, current_lab: Lab):
+        while True:
+            clear_screen()
+            username = input("Enter username of the user whose access needs to be changed: ")
+            try:
+                user: User = self.user_service.get_user_by_username(username)
+                access_dict = get_user_permission_for_lab(user, current_lab.tiny_id)
+                user_data_access_level = access_dict["user"]
+                apparatus_data_access_level = access_dict["apparatus"]
+                print("\nNote: The allowed values for access level are: 'read', 'write' and 'none'. Default value is 'none'.")
+                user_data_access_level = input("\nEnter user's user-data access level (current=" + user_data_access_level + "): ")
+                apparatus_data_access_level = input("Enter user's apparatus-data access level (current=" + apparatus_data_access_level + "): ")
+
+                if user_data_access_level != "read" and user_data_access_level != "write":
+                    user_data_access_level = "none"
+
+                if apparatus_data_access_level != "read" and apparatus_data_access_level != "write":
+                    apparatus_data_access_level = "none"
+
+                access_dict = {
+                    "user": user_data_access_level,
+                    "apparatus": apparatus_data_access_level
+                }
+                self.user_service.update_user_lab_access(self.current_user, current_lab.tiny_id, username, access_dict)
+                print("Access updated successfully!")
+            except NotFoundException:
+                print("User with username " + username + " does not exist.")
+            except ForbiddenOperationException:
+                print("You are not allowed to modify user access levels...")
+                time.sleep(4)
+                return
+            print("\nPress 1 to modify lab access for another user.")
+            print("Press any other key to go back to previous menu.")
+            choice = input("\nEnter your choice: ")
+            if choice == "1":
+                continue
+            else:
+                return
+
     def add_user_menu(self):
         while True:
             clear_screen()
@@ -276,7 +315,7 @@ class Menu:
             user.unique_school_code = input("Enter user's unique school code: ")
             password: str = input("Enter user's account password: ")
 
-            if not self.current_user.org_admin:
+            if self.current_user.org_admin:
                 choice = input(
                     "Make this user org-admin (org-admin is the highest level of authority in the application) (y/N)? ")
                 if choice == 'y':
