@@ -90,9 +90,10 @@ class Menu:
                 print("Press " + str(download_lab_data_option) + " to download lab data in csv file.")
                 option_high_limit = option_high_limit + 9
 
-            print("Press " + str(
-                option_high_limit + 1) + " to logout.")
             option_high_limit = option_high_limit + 1
+            print("Press " + str(option_high_limit) + " to edit profile.")
+            option_high_limit = option_high_limit + 1
+            print("Press " + str(option_high_limit) + " to logout.")
 
             try:
                 choice: int = int(input("\nEnter your choice: "))
@@ -113,6 +114,9 @@ class Menu:
                 print("Logging out...")
                 time.sleep(4)
                 return
+
+            if choice == option_high_limit - 1:
+                self.profile_edit_menu()
 
             if choice == add_user_option:
                 self.add_user_menu()
@@ -330,7 +334,7 @@ class Menu:
         while True:
             clear_screen()
             user: User = User()
-            user.username = input("Enter user's username: ")
+            user.username = input("Enter user's username (you won't be able to change this later): ")
             user.full_name = input("Enter user's full name: ")
             user.mobile_number = input("Enter user's mobile number: ")
             user.unique_school_code = input("Enter user's unique school code: ")
@@ -520,4 +524,13 @@ class Menu:
         input("\nEnter anything to return to previous menu")
         return
 
-
+    def profile_edit_menu(self):
+        clear_screen()
+        self.current_user.full_name = input("Enter new full name (current=" + self.current_user.full_name + "): ")
+        self.current_user.mobile_number = input("Enter new mobile number (current=" + self.current_user.mobile_number + "): ")
+        self.current_user.unique_school_code = input("Enter new unique school code (current=" + self.current_user.unique_school_code + "): ")
+        password: str = input("Enter new account password: ")
+        self.user_service.update_user(self.current_user, self.current_user, password)
+        print("\nProfile data saved successfully!")
+        time.sleep(4)
+        return

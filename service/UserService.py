@@ -50,9 +50,11 @@ class UserService:
         user: User = self.user_repository.get_user_by_username(username)
         self.user_repository.remove_user(user.tiny_id)
 
-    def update_user(self, current_user: User, user: User):
+    def update_user(self, current_user: User, user: User, password: str):
         if user.tiny_id != current_user.tiny_id:
             raise ForbiddenOperationException
+
+        user.hashed_password = hash_string(password)
         return self.user_repository.update_user(user)
 
     def update_user_lab_access(self, current_user: User, lab_id: int, username: str, access_dict: dict):
