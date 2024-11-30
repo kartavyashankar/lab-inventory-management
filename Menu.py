@@ -93,7 +93,12 @@ class Menu:
                 option_high_limit + 1) + " to logout.")
             option_high_limit = option_high_limit + 1
 
-            choice: int = int(input("\nEnter your choice: "))
+            try:
+                choice: int = int(input("\nEnter your choice: "))
+            except ValueError:
+                print("Invalid choice. Please try again...")
+                time.sleep(4)
+                continue
 
             if choice < option_low_limit or choice > option_high_limit:
                 print("Invalid choice. Please try again...")
@@ -160,7 +165,12 @@ class Menu:
             option_high_limit = option_high_limit + 1
             print("Press " + str(option_high_limit) + " to return to previous menu.")
 
-            choice = int(input("\nPlease enter your choice: "))
+            try:
+                choice: int = int(input("\nPlease enter your choice: "))
+            except ValueError:
+                print("Invalid choice. Please try again...")
+                time.sleep(4)
+                continue
 
             if choice == option_high_limit:
                 return
@@ -206,7 +216,12 @@ class Menu:
             apparatus = Apparatus()
             apparatus.lab_id = current_lab.tiny_id
             apparatus.name = input("Enter apparatus name: ")
-            apparatus.year_of_purchase = int(input("Enter year of purchase: "))
+            try:
+                apparatus.year_of_purchase = int(input("Enter year of purchase: "))
+            except ValueError:
+                print("Year of purchase should be a valid integer...")
+                time.sleep(4)
+                continue
             apparatus.working_condition = input("Enter apparatus working condition: ")
             try:
                 self.apparatus_service.add_apparatus(self.current_user, apparatus)
@@ -231,7 +246,12 @@ class Menu:
             try:
                 apparatus: Apparatus = self.apparatus_service.get_apparatus(self.current_user, current_lab.tiny_id, apparatus_id)
                 apparatus.name = input("Enter apparatus name (current=" + apparatus.name + "): ")
-                apparatus.year_of_purchase = int(input("Enter apparatus year of purchase (current=" + str(apparatus.year_of_purchase) +"): "))
+                try:
+                    apparatus.year_of_purchase = int(input("Enter apparatus year of purchase (current=" + str(apparatus.year_of_purchase) +"): "))
+                except ValueError:
+                    print("Year of purchase should be a valid integer...")
+                    time.sleep(4)
+                    continue
                 apparatus.working_condition = input("Enter working condition (current=" + apparatus.working_condition + "): ")
                 self.apparatus_service.update_apparatus(self.current_user, apparatus)
             except NotFoundException:
