@@ -117,7 +117,7 @@ class UserService:
         for user in user_list:
             user_list_dict["Full Name"].append(user.full_name)
             if current_user.org_admin:
-                user_list_dict["Access"].append(self.generate_access_string(current_user, user.access))
+                user_list_dict["Access"].append(self.generate_access_string(current_user, user))
             else:
                 user_list_dict["Access"].append(user.access[lab_id])
 
@@ -128,19 +128,17 @@ class UserService:
 
         return convert_to_dataframe(user_list_dict)
 
-    def generate_access_string(self, current_user: User, access: dict):
+    def generate_access_string(self, current_user, user: User):
         parsed_access: dict = {}
-        if current_user.org_admin:
+        if user.org_admin:
             labs = self.lab_service.get_all_labs(current_user)
             for lab in labs:
-                parsed_access[lab.name] = get_user_permission_for_lab(current_user, lab.tiny_id)
-            return parsed_access
-
-        for lab_id in access.keys():
-            try:
-                lab: Lab = self.lab_service.get_lab_by_id(current_user, int(lab_id))
-                parsed_access[lab.name] = access[lab_id]
-            except NotFoundException:
-                continue
-
+                parsed_access[lab.name] = get_user_permission_for_lab(user, lab.tiny_id)
+        else:
+            for lab_id in user.access.keys():
+                try:
+                    lab: Lab = self.lab_service.get_lab_by_id(current_user, int(lab_id))
+                    parsed_access[lab.name] = user.access[lab_id]
+                except NotFoundException:
+                    continue
         return json.dumps(parsed_access)

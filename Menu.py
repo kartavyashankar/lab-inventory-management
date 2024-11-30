@@ -61,7 +61,10 @@ class Menu:
                 for lab_id in self.current_user.access.keys():
                     if self.current_user.access[lab_id]["user"] == "none" and self.current_user.access[lab_id]["apparatus"] == "none":
                         continue
-                    labs.append(self.lab_service.get_lab_by_id(self.current_user, lab_id))
+                    try:
+                        labs.append(self.lab_service.get_lab_by_id(self.current_user, int(lab_id)))
+                    except NotFoundException:
+                        continue
             option_low_limit: int = 1
             option_high_limit: int = len(labs)
 
@@ -248,7 +251,7 @@ class Menu:
     def edit_apparatus_menu(self, current_lab: Lab):
         while True:
             clear_screen()
-            apparatus_id: int = int(input("Enter the id of the apparatus to be edited."))
+            apparatus_id: int = int(input("Enter the id of the apparatus to be edited: "))
             try:
                 apparatus: Apparatus = self.apparatus_service.get_apparatus(self.current_user, current_lab.tiny_id, apparatus_id)
                 apparatus.name = input("Enter apparatus name (current=" + apparatus.name + "): ")
@@ -260,6 +263,7 @@ class Menu:
                     continue
                 apparatus.working_condition = input("Enter working condition (current=" + apparatus.working_condition + "): ")
                 self.apparatus_service.update_apparatus(self.current_user, apparatus)
+                print("Apparatus data saved successfully!")
             except NotFoundException:
                 print("Apparatus with id " + str(apparatus_id) + " not found.")
             except ForbiddenOperationException:
@@ -277,7 +281,7 @@ class Menu:
     def delete_apparatus_menu(self, current_lab: Lab):
         while True:
             clear_screen()
-            apparatus_id: int = int(input("Enter the id of the apparatus to be removed."))
+            apparatus_id: int = int(input("Enter the id of the apparatus to be removed: "))
             try:
                 self.apparatus_service.remove_apparatus(self.current_user, current_lab.tiny_id, apparatus_id)
                 print("Apparatus data deleted successfully!")
