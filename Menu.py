@@ -78,16 +78,27 @@ class Menu:
             list_all_labs_option = len(labs) + 8
             download_lab_data_option = len(labs) + 9
 
+            action_map = {}
+
             if self.current_user.org_admin:
                 print("Press " + str(add_user_option) + " to add new users.")
+                action_map[add_user_option] = self.add_user_menu
                 print("Press " + str(remove_user_option) + " to remove user.")
+                action_map[remove_user_option] = self.remove_user_menu
                 print("Press " + str(list_all_users_option) + " to list all users.")
+                action_map[list_all_users_option] = self.list_all_users_menu
                 print("Press " + str(download_user_data_option) + " to download user data in csv file.")
+                action_map[download_user_data_option] = self.download_user_data_menu
                 print("Press " + str(add_lab_option) + " to add new labs.")
+                action_map[add_lab_option] = self.add_lab_menu
                 print("Press " + str(edit_lab_option) + " to edit lab's name.")
+                action_map[edit_lab_option] = self.edit_lab_menu
                 print("Press " + str(remove_lab_option) + " to remove labs. Beware, this operation will also remove related apparatus data.")
+                action_map[remove_lab_option] = self.remove_lab_menu
                 print("Press " + str(list_all_labs_option) + " to list all labs.")
+                action_map[list_all_labs_option] = self.list_all_labs_menu
                 print("Press " + str(download_lab_data_option) + " to download lab data in csv file.")
+                action_map[download_lab_data_option] = self.download_lab_data_menu
                 option_high_limit = option_high_limit + 9
 
             option_high_limit = option_high_limit + 1
@@ -106,36 +117,16 @@ class Menu:
                 print("Invalid choice. Please try again...")
                 time.sleep(4)
                 continue
-
-            if choice <= len(labs):
+            elif choice <= len(labs):
                 self.lab_menu(labs[choice - 1])
-
-            if choice == option_high_limit:
+            elif choice == option_high_limit:
                 print("Logging out...")
                 time.sleep(4)
                 return
-
-            if choice == option_high_limit - 1:
+            elif choice == option_high_limit - 1:
                 self.profile_edit_menu()
-
-            if choice == add_user_option:
-                self.add_user_menu()
-            elif choice == remove_user_option:
-                self.remove_user_menu()
-            elif choice == list_all_users_option:
-                self.list_all_users_menu()
-            elif choice == download_user_data_option:
-                self.download_user_data_menu()
-            elif choice == add_lab_option:
-                self.add_lab_menu()
-            elif choice == edit_lab_option:
-                self.edit_lab_menu()
-            elif choice == remove_lab_option:
-                self.remove_lab_menu()
-            elif choice == list_all_labs_option:
-                self.list_all_labs_menu()
-            elif choice == download_lab_data_option:
-                self.download_lab_data_menu()
+            else:
+                action_map[choice]()
 
     def lab_menu(self, current_lab: Lab):
         while True:
@@ -149,7 +140,7 @@ class Menu:
             }
             option_low_limit = 1
             option_high_limit = 2
-            if self.current_user.org_admin or self.current_user.access[str(current_lab.tiny_id)]["apparatus"] == "write":
+            if get_user_permission_for_lab(self.current_user, current_lab.tiny_id)["apparatus"] == "write":
                 option_high_limit = option_high_limit + 1
                 print("Press " + str(option_high_limit) + " to add apparatus data.")
                 action_map[option_high_limit] = self.add_apparatus_menu
@@ -162,7 +153,16 @@ class Menu:
                 print("Press " + str(option_high_limit) + " to delete apparatus data.")
                 action_map[option_high_limit] = self.delete_apparatus_menu
 
-            if self.current_user.org_admin or self.current_user.access[str(current_lab.tiny_id)]["user"] == "write":
+            if get_user_permission_for_lab(self.current_user, current_lab.tiny_id)["user"] != "none":
+                option_high_limit = option_high_limit + 1
+                print("Press " + str(option_high_limit) + " to list lab-user data.")
+                action_map[option_high_limit] = self.list_all_lab_users_menu
+
+                option_high_limit = option_high_limit + 1
+                print("Press " + str(option_high_limit) + " to download lab-user data.")
+                action_map[option_high_limit] = self.download_lab_user_data_menu
+
+            if get_user_permission_for_lab(self.current_user, current_lab.tiny_id)["user"] == "write":
                 option_high_limit = option_high_limit + 1
                 print("Press " + str(option_high_limit) + " to edit user access to lab.")
                 action_map[option_high_limit] = self.update_user_lab_access_menu
@@ -179,11 +179,12 @@ class Menu:
 
             if choice == option_high_limit:
                 return
-            if choice < option_low_limit or choice > option_high_limit:
+            elif choice < option_low_limit or choice > option_high_limit:
                 print("Invalid choice. Please try again...")
                 time.sleep(4)
                 continue
-            action_map[choice](current_lab)
+            else:
+                action_map[choice](current_lab)
 
     def list_all_apparatus_menu(self, current_lab: Lab):
         clear_screen()
@@ -276,9 +277,10 @@ class Menu:
     def delete_apparatus_menu(self, current_lab: Lab):
         while True:
             clear_screen()
-            apparatus_id: int = int(input("Enter the id of the apparatus to be edited."))
+            apparatus_id: int = int(input("Enter the id of the apparatus to be removed."))
             try:
                 self.apparatus_service.remove_apparatus(self.current_user, current_lab.tiny_id, apparatus_id)
+                print("Apparatus data deleted successfully!")
             except ForbiddenOperationException:
                 print("You are not allowed to delete apparatus data.")
                 time.sleep(4)
@@ -290,6 +292,36 @@ class Menu:
                 continue
             else:
                 return
+
+    def list_all_lab_users_menu(self, current_lab: Lab):
+        clear_screen()
+        print("Loading lab-users data...")
+        try:
+            lab_user_df = self.user_service.list_user_data_for_lab(self.current_user, current_lab.tiny_id)
+            clear_screen()
+            print(lab_user_df)
+        except ForbiddenOperationException:
+            print("You are not allowed to list lab-users...")
+            time.sleep(4)
+            return
+
+        input("\nEnter anything to return to previous menu")
+        return
+
+    def download_lab_user_data_menu(self, current_lab: Lab):
+        clear_screen()
+        print("Downloading lab-users data...")
+        try:
+            filename = self.user_service.export_user_data_for_lab(self.current_user, current_lab.tiny_id)
+            clear_screen()
+            print("Data downloaded to " + str(filename))
+        except ForbiddenOperationException:
+            print("You are not allowed to download lab-users data...")
+            time.sleep(4)
+            return
+
+        input("\nEnter anything to return to previous menu")
+        return
 
     def update_user_lab_access_menu(self, current_lab: Lab):
         while True:
