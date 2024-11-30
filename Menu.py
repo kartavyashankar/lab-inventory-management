@@ -3,7 +3,8 @@ import time
 from pandas import DataFrame
 
 from client.DBClient import DBClient
-from exceptions.Exceptions import UnauthorizedUserException, NotFoundException, ForbiddenOperationException
+from exceptions.Exceptions import UnauthorizedUserException, NotFoundException, ForbiddenOperationException, \
+    UsernameUnavailableException
 from model.Apparatus import Apparatus
 from model.Lab import Lab
 from model.User import User
@@ -346,8 +347,13 @@ class Menu:
             print("password: " + password)
             choice = input("\nConfirm (y/N)? ")
             if choice == 'y':
-                self.user_service.add_user(user, password)
-                print("User created successfully!")
+                try:
+                    self.user_service.add_user(user, password)
+                    print("User created successfully!")
+                except UsernameUnavailableException:
+                    print("Username " + user.username + " is not available. Please try again with another username...")
+                    time.sleep(4)
+                    continue
             else:
                 print("User creation aborted...")
 
