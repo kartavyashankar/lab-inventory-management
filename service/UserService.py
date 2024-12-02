@@ -109,6 +109,9 @@ class UserService:
         if get_user_permission_for_lab(current_user, lab_id)["user"] == "write":
             elevated_data = True
 
+        if current_user.org_admin:
+            elevated_data = True
+
         user_list_dict: dict = {"Full Name": [], "Access": [], "Mobile Number": []}
         if elevated_data:
             user_list_dict["User Id"] = []

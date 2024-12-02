@@ -1,4 +1,5 @@
 import time
+from getpass import getpass
 
 from pandas import DataFrame
 
@@ -38,7 +39,7 @@ class Menu:
             clear_screen()
             print("Please login to the inventory management system\n")
             username = input("Username: ")
-            password = input("Password: ")
+            password = getpass(prompt="Password: ")
 
             try:
                 user: User = self.user_service.login(username, password)
