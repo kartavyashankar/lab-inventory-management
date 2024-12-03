@@ -1,8 +1,6 @@
 import json
 
-from dependency_injector.wiring import Provide, inject
 
-from client.ClientContainer import ClientContainer
 from client.DBClient import DBClient
 from exceptions.Exceptions import NotFoundException
 from model.User import User
@@ -24,8 +22,7 @@ def parse_user_data(user_as_dict: dict):
 
 
 class UserRepository:
-    @inject
-    def __init__(self, db_client: DBClient = Provide[ClientContainer.db_client]):
+    def __init__(self, db_client: DBClient):
         self.client = db_client.user_client()
 
     def list_users(self):

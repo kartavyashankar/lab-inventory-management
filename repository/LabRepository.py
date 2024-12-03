@@ -1,6 +1,3 @@
-from dependency_injector.wiring import Provide, inject
-
-from client.ClientContainer import ClientContainer
 from client.DBClient import DBClient
 from exceptions.Exceptions import NotFoundException
 from model.Lab import Lab
@@ -16,8 +13,7 @@ def parse_lab_data(lab_as_dict: dict):
 
 
 class LabRepository:
-    @inject
-    def __init__(self, db_client: DBClient = Provide[ClientContainer.db_client]):
+    def __init__(self, db_client: DBClient):
         self.client = db_client.labs_client()
 
     def list_labs(self):
